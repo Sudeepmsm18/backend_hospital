@@ -71,9 +71,10 @@ router.get('/stats', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { name, email, password, role } = req.body;
-  if (!name || !email || !role) return res.status(400).json({ message: 'Name, email and role are required' });
+  if (!name || !email || !role || !password) return res.status(400).json({ message: 'Name, email, role and password are required' });
+  if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
   if (await User.exists({ email: email.toLowerCase() })) return res.status(400).json({ message: 'Email already registered' });
-  const user = await User.create({ ...pick(req.body), password: await bcrypt.hash(password || 'password123', 10) });
+  const user = await User.create({ ...pick(req.body), password: await bcrypt.hash(password, 10) });
   res.status(201).json(user);
 });
 
@@ -93,12 +94,18 @@ router.put('/:id', async (req, res) => {
   res.json(user);
 });
 
+// Without ?force=1, deleting someone with upcoming appointments is refused (409) so the admin can confirm;
+// with it, those appointments are cancelled first.
 router.delete('/:id', async (req, res) => {
   if (req.user._id.equals(req.params.id)) return res.status(400).json({ message: "You can't delete your own account" });
-  const booked = await Appointment.countDocuments({ $or: [{ doctor: req.params.id }, { patient: req.params.id }], status: 'booked' });
-  if (booked) return res.status(400).json({ message: `This user has ${booked} upcoming appointment(s). Cancel them first.` });
-  await User.findByIdAndDelete(req.params.id);
-  res.json({ ok: true });
+  const upcoming = { $or: [{ doctor: req.params.id }, { patient: req.params.id }], status: 'booked' };
+  const booked = await Appointment.countDocuments(upcoming);
+  if (booked && req.query.force !== '1') {
+    return res.status(409).json({ message: `This user has ${booked} upcoming appointment(s).`, booked });
+  }
+  if (booked) await Appointment.updateMany(upcoming, { status: 'cancelled' });
+  if (!(await User.findByIdAndDelete(req.params.id))) return res.status(404).json({ message: 'User not found' });
+  res.json({ ok: true, cancelled: booked });
 });
 
 export default router;

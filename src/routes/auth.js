@@ -23,7 +23,7 @@ router.post('/login', async (req, res) => {
   res.json({ token: signToken(user), user });
 });
 
-// Self sign-up is for patients only; staff accounts come from the seed.
+// Self sign-up is for patients only; staff accounts are created by an admin.
 router.post('/register', async (req, res) => {
   const { name, email, password, phone, age, gender } = req.body;
   if (!name || !email || !password) return res.status(400).json({ message: 'Name, email and password are required' });

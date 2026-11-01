@@ -14,6 +14,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// The API lives under /api; this just tells anyone opening the bare URL that the server is up.
+app.get('/', (req, res) => res.json({ ok: true, message: 'CarePoint API is running. Endpoints are under /api, e.g. /api/health' }));
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/doctors', doctorRoutes);

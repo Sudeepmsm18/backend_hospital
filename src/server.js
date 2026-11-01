@@ -10,8 +10,14 @@ import patientRoutes from './routes/patients.js';
 import prescriptionRoutes from './routes/prescriptions.js';
 import userRoutes from './routes/users.js';
 
+// Frontends allowed to call the API: local Vite dev plus any in CORS_ORIGINS (comma-separated),
+// e.g. CORS_ORIGINS=https://carepoint.onrender.com
+const allowedOrigins = ['http://localhost:5173', ...(process.env.CORS_ORIGINS || '').split(',')]
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // The API lives under /api; this just tells anyone opening the bare URL that the server is up.

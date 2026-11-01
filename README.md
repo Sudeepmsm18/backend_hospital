@@ -8,7 +8,8 @@ npm run dev    # http://localhost:5050
 ```
 
 `.env` needs `MONGODB_URI`, `DB_NAME` (default `carepoint`), `JWT_SECRET`, `PORT`, and the default admin
-(`ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`).
+(`ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`). `http://localhost:5173` may always call the API; list any
+deployed frontend in `CORS_ORIGINS` (comma-separated, e.g. `https://carepoint.onrender.com`).
 
 There is no dummy data. On startup the server creates the default admin from `.env` if it doesn't exist.
 Log in as that admin and add doctors, nurses and pharmacists from the sidebar. Patients sign up themselves,
